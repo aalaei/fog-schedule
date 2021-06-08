@@ -23,6 +23,7 @@ class ControllerClient(protocol.Protocol):
         self.start_download_time = None
         self.start_job_time = None
         self.task_done_time = None
+        self.problem_transfer_throughput = None
 
     def send_message(self, mes, is_binary=False):
         if is_binary:
@@ -43,14 +44,17 @@ class ControllerClient(protocol.Protocol):
             self.is_info_known = True
         else:
 
-            (self.start_download_time, self.start_job_time, self.task_done_time, data) = struct.unpack('fffi', data)
+            decoded_tuple = struct.unpack('fffii', data)
+            (self.start_download_time, self.start_job_time, self.task_done_time, self.problem_transfer_throughput,
+             data) = decoded_tuple
             print("ans: {} is received from fog server".format(data))
             if verify_ans(self.chosen_task, data, self._difficulty_level):
                 print(Fore.GREEN +
-                      "ans is verified taken Time {:.2f}+{:.2f}={:.2f}".format(
+                      "ans is verified taken Time {:.2f}+{:.2f}={:.2f} R={:.2f} MBytes/s".format(
                           self.start_job_time - self.start_download_time,
                           self.task_done_time - self.start_job_time,
-                          self.task_done_time - self.start_download_time)
+                          self.task_done_time - self.start_download_time,
+                          self.problem_transfer_throughput/1048576)
                       + Style.RESET_ALL)
 
             else:

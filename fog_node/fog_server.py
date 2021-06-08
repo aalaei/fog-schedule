@@ -10,13 +10,15 @@ class FogServer(protocol.Protocol):
         self.clients = clients
         self.remainingBytes = -np.inf
         self.task_id = None
-        self.file = None
+        self.problem_content = None
         self.difficulty_level = 0
         self.problem_prefix = problem_prefix
         self.enqueue_task = enqueue_task
         self.start_download_time = None
+        self.end_download_time = None
         self.start_job_time = None
         self.task_done_time = None
+        self.problem_transfer_throughput = None
 
     def connectionMade(self):
         print("FOG server: new connection from id={}".format(self.my_id))
@@ -33,18 +35,27 @@ class FogServer(protocol.Protocol):
             self.start_download_time = time()
             self.task_id, self.remainingBytes, self.difficulty_level = [eval(x) for x in
                                                                         data.decode("utf-8").split("/")]
-            self.file = open(self.problem_prefix + str(self.task_id) + ".txt", "wb")
+            self.problem_content = b''
             self.send_message(str("1"))
             print("network: task {} with difficultyLevel={} is downloading".format(self.task_id, self.difficulty_level))
             return
-        elif self.remainingBytes > 0 and self.file is not None:
-            self.file.write(data)
+        elif self.remainingBytes > 0:
+            self.problem_content = b"".join([self.problem_content, data])
             self.remainingBytes -= len(data)
             print("network: progress on task {}, {} byte is remaining".format(self.task_id, self.remainingBytes))
 
-        if self.remainingBytes <= 0 and self.file is not None:
-            self.file.close()
-            print("network: task {} is downloaded completely".format(self.task_id))
+        if self.remainingBytes <= 0:
+            self.end_download_time = time()
+            self.problem_transfer_throughput = \
+                len(self.problem_content) / (self.end_download_time - self.start_download_time)
+
+            file = open(self.problem_prefix + str(self.task_id) + ".txt", "wb")
+            file.write(self.problem_content)
+            file.close()
+            self.problem_content = None
+
+            print("network: task {} is downloaded completely R={:.2f} MBytes/s"
+                  .format(self.task_id, self.problem_transfer_throughput/1048576))
             self.enqueue_task(str(self.task_id))
 
     def connectionLost(self, reason=connectionDone):

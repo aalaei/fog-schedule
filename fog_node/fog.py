@@ -35,9 +35,11 @@ def manage_tasks(connections):
             res = computational_task(file_name, fog_server_obj.difficulty_level)
             fog_server_obj.task_done_time = time()
             ref_time = time()
-            fog_server_obj.send_message(struct.pack('fffi', fog_server_obj.start_download_time - ref_time,
+            fog_server_obj.send_message(struct.pack('fffii', fog_server_obj.start_download_time - ref_time,
                                                     fog_server_obj.start_job_time - ref_time,
-                                                    fog_server_obj.task_done_time - ref_time, res), is_binary=True)
+                                                    fog_server_obj.task_done_time - ref_time,
+                                                    int(fog_server_obj.problem_transfer_throughput),
+                                                    res), is_binary=True)
             print(Fore.GREEN + "task {} is done completely".format(name) + Style.RESET_ALL)
             fog_server_obj.transport.loseConnection()
 
