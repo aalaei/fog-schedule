@@ -6,6 +6,7 @@ from twisted.internet.protocol import ServerFactory as SrFactory, connectionDone
 from status import *
 from controller_client import ControllerClientFactory
 FOG_SERVER_IP = "127.0.0.1"
+VERBOSE_MODE = False
 
 
 class ControllerServer(protocol.Protocol):
@@ -92,7 +93,8 @@ class ControllerServer(protocol.Protocol):
             self.send_message(value=object_dict, type='id_res')
         elif data['type'] == "cl_status":
             self.status = Status(json.loads(data['value']))
-            # print("status received: {}".format(self.status))
+            if VERBOSE_MODE:
+                print("status received: {}".format(self.status))
         elif data['type'] == "comp_res":
             fog_server_port, task_id = [eval(x) for x in str(data['value']).split("/")]
 

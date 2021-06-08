@@ -1,5 +1,6 @@
 import os
 import random
+# import names
 
 transaction_count = 1000000
 problem_count = 10
@@ -11,8 +12,10 @@ def main():
         f = open(problem, "w")
         for i in range(transaction_count):
             f.write(chr(random.randint(ord('A'), ord('Z'))))
+            # f.write(names.get_first_name())
             f.write(">")
             f.write(chr(random.randint(ord('A'), ord('Z'))))
+            # f.write(names.get_first_name())
             f.write(":")
             f.write(str(random.randint(0, 10000000)/100))
             f.write('\n')

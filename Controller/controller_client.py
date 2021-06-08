@@ -50,7 +50,7 @@ class ControllerClient(protocol.Protocol):
             print("ans: {} is received from fog server".format(data))
             if verify_ans(self.chosen_task, data, self._difficulty_level):
                 print(Fore.GREEN +
-                      "ans is verified taken Time {:.2f}+{:.2f}={:.2f} R={:.2f} MBytes/s".format(
+                      "ans is verified taken Time={:.2f}+{:.2f}={:.2f}s,  R={:.2f} MBytes/s".format(
                           self.start_job_time - self.start_download_time,
                           self.task_done_time - self.start_job_time,
                           self.task_done_time - self.start_download_time,

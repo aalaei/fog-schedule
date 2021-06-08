@@ -2,6 +2,7 @@ from twisted.internet import reactor, protocol
 from twisted.internet.protocol import ServerFactory as SrFactory, connectionDone
 import numpy as np
 from time import time
+VERBOSE_MODE = False
 
 
 class FogServer(protocol.Protocol):
@@ -42,7 +43,8 @@ class FogServer(protocol.Protocol):
         elif self.remainingBytes > 0:
             self.problem_content = b"".join([self.problem_content, data])
             self.remainingBytes -= len(data)
-            print("network: progress on task {}, {} byte is remaining".format(self.task_id, self.remainingBytes))
+            if VERBOSE_MODE:
+                print("network: progress on task {}, {} byte is remaining".format(self.task_id, self.remainingBytes))
 
         if self.remainingBytes <= 0:
             self.end_download_time = time()
