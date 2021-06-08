@@ -22,8 +22,8 @@ class ControllerServer(protocol.Protocol):
 
     def ping_clients(self):
         while True:
-            self.send_message(type="ping", value="")
             sleep(self.CHECK_INTERVAL_MS / 1000)
+            self.send_message(type="ping", value="")
 
     def connectionMade(self):
         print("new connection from id={}".format(self.my_id))
