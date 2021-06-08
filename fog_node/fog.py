@@ -48,13 +48,20 @@ def enqueue_task(name):
     tasks_queue.append(name)
 
 
+def update_status(conn):
+    while True:
+        conn.status.rssi = random.random()
+        conn.status.q_len = len(tasks_queue)
+        sleep(0.1)
+
+
 if __name__ == '__main__':
     if os.path.exists(problem_prefix) and os.path.isdir(problem_prefix):
         shutil.rmtree(problem_prefix)
 
     os.mkdir(problem_prefix)
     endpoint = TCP4ClientEndpoint(reactor, CONTROLLER_SERVER_IP, CONTROLLER_SERVER_PORT)
-    endpoint.connect(FogClientFactory(FOG_SERVER_PORT))
+    endpoint.connect(FogClientFactory(FOG_SERVER_PORT, update_status_func=update_status))
 
     endpoint2 = TCP4ServerEndpoint(reactor, FOG_SERVER_PORT)
     endpoint2.listen(FogServerFactory(problem_prefix, manage_tasks, enqueue_task))

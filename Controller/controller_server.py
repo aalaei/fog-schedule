@@ -6,7 +6,7 @@ from twisted.internet.protocol import ServerFactory as SrFactory, connectionDone
 from status import *
 from controller_client import ControllerClientFactory
 FOG_SERVER_IP = "127.0.0.1"
-VERBOSE_MODE = False
+VERBOSE_MODE = True
 
 
 class ControllerServer(protocol.Protocol):
@@ -118,13 +118,13 @@ class ControllerServer(protocol.Protocol):
 
 
 class ControllerServerFactory(SrFactory):
-    def __init__(self, check_interval_ms, difficulty_level, schedule_task):
+    def __init__(self, check_interval_ms, difficulty_level, manage_task):
         self.clients = {}
         self.last_id = 0
         self.status = Status(None)
         self.check_interval_ms = check_interval_ms
         self.difficulty_level = difficulty_level
-        reactor.callInThread(schedule_task, self)
+        reactor.callInThread(manage_task, self)
 
     def buildProtocol(self, addr):
         self.last_id += 1

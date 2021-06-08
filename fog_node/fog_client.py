@@ -10,13 +10,13 @@ last_job_id = 1
 
 
 class FogClient(protocol.Protocol):
-    def __init__(self, all_clients: list, status, fog_server_port):
+    def __init__(self, all_clients: list, status, fog_server_port, update_status_func):
         self.status = status
         self.all_clients = all_clients
         self.FOG_SERVER_PORT = fog_server_port
         print("Created")
         reactor.callInThread(self.message_input)
-        reactor.callInThread(self.update_status)
+        reactor.callInThread(update_status_func, self)
 
     @staticmethod
     def __encode_json(**kwargs):
@@ -27,11 +27,6 @@ class FogClient(protocol.Protocol):
 
     def set_status(self, status):
         self.status = status
-
-    def update_status(self):
-        while True:
-            sleep(1)
-            self.status.rssi = random.random()
 
     def message_input(self):
         while True:
@@ -71,8 +66,9 @@ class FogClient(protocol.Protocol):
 
 class FogClientFactory(ClFactory):
 
-    def __init__(self, fog_server_port):
-        self.fog_server_port=fog_server_port
+    def __init__(self, fog_server_port, update_status_func):
+        self.fog_server_port = fog_server_port
+        self.update_status_func = update_status_func
         self.all_clients = []
         self.status = Status(None)
 
@@ -84,4 +80,5 @@ class FogClientFactory(ClFactory):
         self.retry(connector)
 
     def buildProtocol(self, addr):
-        return FogClient(all_clients=self.all_clients, status=self.status, fog_server_port=self.fog_server_port)
+        return FogClient(all_clients=self.all_clients, status=self.status,
+                         fog_server_port=self.fog_server_port, update_status_func=self.update_status_func)
