@@ -4,6 +4,7 @@ from twisted.internet import protocol
 from twisted.internet.protocol import ReconnectingClientFactory as ClFactory
 from computation import try_num
 import struct
+from time import time
 
 
 def verify_ans(chosen_task, ans, _difficulty_level):
@@ -20,9 +21,11 @@ class ControllerClient(protocol.Protocol):
         self.chosen_task = chosen_task
         self.task_id = task_id
         self._difficulty_level = _difficulty_level
+        self.start_transmission_time = None
         self.start_download_time = None
         self.start_job_time = None
         self.task_done_time = None
+        self.all_done_time = None
         self.problem_transfer_throughput = None
 
     def send_message(self, mes, is_binary=False):
@@ -32,6 +35,7 @@ class ControllerClient(protocol.Protocol):
             self.transport.write(mes.encode("utf-8"))
 
     def connectionMade(self):
+        self.start_transmission_time = time()
         f = open(os.path.join("problems", "problem" + str(self.chosen_task) + ".txt"), "rb")
         self.file_content = f.read()
         f.close()
@@ -48,13 +52,15 @@ class ControllerClient(protocol.Protocol):
             (self.start_download_time, self.start_job_time, self.task_done_time, self.problem_transfer_throughput,
              data) = decoded_tuple
             print("ans: {} is received from fog server".format(data))
+            self.all_done_time = time()
             if verify_ans(self.chosen_task, data, self._difficulty_level):
                 print(Fore.GREEN +
-                      "ans is verified taken Time={:.2f}+{:.2f}={:.2f}s,  R={:.2f} MBytes/s".format(
+                      "ans is verified taken Time={:.2f}+{:.2f}={:.2f}s,  R={:.2f} MBytes/s, Service Time={:.2f}s".format(
                           self.start_job_time - self.start_download_time,
                           self.task_done_time - self.start_job_time,
                           self.task_done_time - self.start_download_time,
-                          self.problem_transfer_throughput/1048576)
+                          self.problem_transfer_throughput/1048576,
+                          self.all_done_time - self.start_transmission_time)
                       + Style.RESET_ALL)
 
             else:
