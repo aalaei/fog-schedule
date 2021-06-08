@@ -2,7 +2,7 @@ import os
 import random
 # import names
 
-transaction_count = 1000000
+transaction_count = 100000
 problem_count = 10
 
 

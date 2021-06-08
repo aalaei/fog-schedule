@@ -15,7 +15,7 @@ PROBLEM_GENERATION_INTERVAL_MS = 2_000
 
 CONTROLLER_SERVER_PORT = 12345
 
-difficulty_level = 5
+difficulty_level = 3
 all_tasks_queue = []
 
 
