@@ -13,9 +13,12 @@ from computation import computational_task
 from fog_client import FogClientFactory
 from fog_server import FogServerFactory
 
-CONTROLLER_SERVER_PORT = 12345
 CONTROLLER_SERVER_IP = "127.0.0.1"
+CONTROLLER_SERVER_PORT = 12345
+
+FOG_SERVER_IP = "127.0.0.1"
 FOG_SERVER_PORT = random.randint(10000, 65535)
+
 problem_prefix = "pr{}/".format(random.randint(1, 99999999))
 tasks_queue = []
 
@@ -61,7 +64,8 @@ if __name__ == '__main__':
 
     os.mkdir(problem_prefix)
     endpoint = TCP4ClientEndpoint(reactor, CONTROLLER_SERVER_IP, CONTROLLER_SERVER_PORT)
-    endpoint.connect(FogClientFactory(FOG_SERVER_PORT, update_status_func=update_status))
+    endpoint.connect(FogClientFactory(fog_server_ip=FOG_SERVER_IP, fog_server_port=FOG_SERVER_PORT
+                                      , update_status_func=update_status))
 
     endpoint2 = TCP4ServerEndpoint(reactor, FOG_SERVER_PORT)
     endpoint2.listen(FogServerFactory(problem_prefix, manage_tasks, enqueue_task))

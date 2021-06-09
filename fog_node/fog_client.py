@@ -10,10 +10,12 @@ last_job_id = 1
 
 
 class FogClient(protocol.Protocol):
-    def __init__(self, all_clients: list, status, fog_server_port, update_status_func):
+
+    def __init__(self, all_clients: list, status, update_status_func, fog_server_port, fog_server_ip):
         self.status = status
         self.all_clients = all_clients
         self.FOG_SERVER_PORT = fog_server_port
+        self.FOG_SERVER_IP = fog_server_ip
         print("Created")
         reactor.callInThread(self.message_input)
         reactor.callInThread(update_status_func, self)
@@ -52,7 +54,8 @@ class FogClient(protocol.Protocol):
             self.send_message(type="cl_status", value=self.status.to_json())
         elif data['type'] == 'comp_req':
             global last_job_id
-            self.send_message(type="comp_res", value="{}/{}".format(self.FOG_SERVER_PORT, last_job_id))
+            self.send_message(type="comp_res", value="{}/{}/{}"
+                              .format(self.FOG_SERVER_PORT, last_job_id, self.FOG_SERVER_IP))
             last_job_id += 1
         else:
             print(data.get('value', "No value in the message"))
@@ -66,7 +69,8 @@ class FogClient(protocol.Protocol):
 
 class FogClientFactory(ClFactory):
 
-    def __init__(self, fog_server_port, update_status_func):
+    def __init__(self, fog_server_ip, fog_server_port, update_status_func):
+        self.fog_server_ip = fog_server_ip
         self.fog_server_port = fog_server_port
         self.update_status_func = update_status_func
         self.all_clients = []
@@ -80,5 +84,5 @@ class FogClientFactory(ClFactory):
         self.retry(connector)
 
     def buildProtocol(self, addr):
-        return FogClient(all_clients=self.all_clients, status=self.status,
-                         fog_server_port=self.fog_server_port, update_status_func=self.update_status_func)
+        return FogClient(all_clients=self.all_clients, status=self.status, update_status_func=self.update_status_func,
+                         fog_server_ip=self.fog_server_ip, fog_server_port=self.fog_server_port)

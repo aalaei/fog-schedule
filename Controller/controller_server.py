@@ -5,7 +5,7 @@ from twisted.internet.protocol import ServerFactory as SrFactory, connectionDone
 
 from status import *
 from controller_client import ControllerClientFactory
-FOG_SERVER_IP = "127.0.0.1"
+
 VERBOSE_MODE = True
 
 
@@ -96,9 +96,10 @@ class ControllerServer(protocol.Protocol):
             if VERBOSE_MODE:
                 print("status received: {}".format(self.status))
         elif data['type'] == "comp_res":
-            fog_server_port, task_id = [eval(x) for x in str(data['value']).split("/")]
+            fog_server_port, task_id, fog_server_ip = [x if '.' in x else eval(x) for x in
+                                                       str(data['value']).split("/")]
 
-            endpoint2 = TCP4ClientEndpoint(reactor, FOG_SERVER_IP, fog_server_port)
+            endpoint2 = TCP4ClientEndpoint(reactor, fog_server_ip, fog_server_port)
             endpoint2.connect(ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level))
             self.chosen_task = None
         else:

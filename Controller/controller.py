@@ -8,22 +8,37 @@ import numpy as np
 '''user defined imports'''
 from controller_server import ControllerServerFactory
 import schedule
-
+# timing config
 CHECK_INTERVAL_MS = 1000
 SCHEDULE_INTERVAL_MS = 1000
-PROBLEM_GENERATION_INTERVAL_MS = 2_000
 
+# problem generation config
+PROBLEM_GENERATION_INTERVAL_MS = 2_000
+PROBLEM_GENERATION_POISSON_LAMBDA = 0.5
+PROBLEM_GENERATION_POISSON_OBSERVATION_TIME = 10
+
+# network config
 CONTROLLER_SERVER_PORT = 12345
 
 difficulty_level = 3
 all_tasks_queue = []
 
 
-def problem_feeder():
+def simple_problem_feeder():
     while True:
         all_tasks_queue.append(str(random.randint(1, 10)))
         sleep(PROBLEM_GENERATION_INTERVAL_MS / 1000)
 
+
+def poisson_problem_feeder():
+    while True:
+        dt = np.random.default_rng().exponential(1/PROBLEM_GENERATION_POISSON_LAMBDA)
+        all_tasks_queue.append(str(random.randint(1, 10)))
+        sleep(dt)
+
+
+problem_feeder = poisson_problem_feeder
+# problem_feeder = simple_problem_feeder
 
 schedule_task = schedule.schedule_task_random
 # schedule_task = schedule.schedule_task_sjq
