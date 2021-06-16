@@ -50,14 +50,14 @@ class ControllerClient(protocol.Protocol):
             self.is_info_known = True
         else:
 
-            decoded_tuple = struct.unpack('fffii', data)
+            decoded_tuple = struct.unpack('dddQQ', data)
             (self.start_download_time, self.start_job_time, self.task_done_time, self.problem_transfer_throughput,
              data) = decoded_tuple
             print("ans: {} is received from fog server".format(data))
             self.all_done_time = time()
             if verify_ans(self.chosen_task, data, self._difficulty_level):
                 print(Fore.GREEN +
-                      "ans is verified taken Time={:.4f}+{:.4f}={:.4f}s,  R={:.2f} MBytes/s, Service Time={:.4f}s".format(
+                      "ans is verified/ taken Time={:.4f}+{:.4f}={:.4f}s,  R={:.2f} MBytes/s, Service Time={:.4f}s".format(
                           self.start_job_time - self.start_download_time,
                           self.task_done_time - self.start_job_time,
                           self.task_done_time - self.start_download_time,

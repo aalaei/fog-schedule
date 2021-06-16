@@ -29,7 +29,6 @@ class FogClient(protocol.Protocol):
     def set_status(self, status):
         self.status = status
 
-
     def connectionMade(self):
         self.send_message(type="id_req", value=1)
 

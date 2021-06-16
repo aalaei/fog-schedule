@@ -1,7 +1,9 @@
 from twisted.internet import reactor, protocol
 from twisted.internet.protocol import ServerFactory as SrFactory, connectionDone
 import numpy as np
-from time import time
+from time import time, sleep
+import sys
+
 VERBOSE_MODE = False
 
 
@@ -45,11 +47,13 @@ class FogServer(protocol.Protocol):
             self.remainingBytes -= len(data)
             if VERBOSE_MODE:
                 print("network: progress on task {}, {} byte is remaining".format(self.task_id, self.remainingBytes))
-
-        if self.remainingBytes <= 0:
+        if self.remainingBytes == 0:
             self.end_download_time = time()
-            self.problem_transfer_throughput = \
-                len(self.problem_content) / (self.end_download_time - self.start_download_time)
+            if self.end_download_time == self.start_download_time:
+                self.problem_transfer_throughput = 2 ** 64 - 1
+            else:
+                self.problem_transfer_throughput = \
+                    len(self.problem_content) / (self.end_download_time - self.start_download_time)
 
             file = open(self.problem_prefix + str(self.task_id) + ".txt", "wb")
             file.write(self.problem_content)

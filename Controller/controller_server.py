@@ -2,6 +2,7 @@ from time import sleep
 from twisted.internet import reactor, protocol
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import ServerFactory as SrFactory, connectionDone
+from computation import diff2dmnd
 
 from status import *
 from controller_client import ControllerClientFactory
@@ -122,8 +123,6 @@ class ControllerServer(protocol.Protocol):
     def set_communication_demand(self, demand):
         self.request['cmntn_dmnd']=demand
 
-def difficulty2cmpdmnd(diff):
-    return diff
 
 class ControllerServerFactory(SrFactory):
     def __init__(self, check_interval_ms, difficulty_level, manage_task, request):
@@ -133,7 +132,7 @@ class ControllerServerFactory(SrFactory):
         self.check_interval_ms = check_interval_ms
         self.difficulty_level = difficulty_level
         self.request = request
-        self.request['cmp_dmnd'] = difficulty2cmpdmnd(difficulty_level)
+        self.request['cmp_dmnd'] = diff2dmnd(difficulty_level)
         reactor.callInThread(manage_task, self, self.request)
 
     def buildProtocol(self, addr):

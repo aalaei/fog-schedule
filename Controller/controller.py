@@ -13,7 +13,6 @@ import schedule
 from time import time
 from matplotlib import pyplot as plt
 
-
 # timing config
 CHECK_INTERVAL_MS = 1000
 SCHEDULE_INTERVAL_MS = 1000
@@ -26,7 +25,7 @@ PROBLEM_GENERATION_POISSON_OBSERVATION_TIME = 10
 # network config
 CONTROLLER_SERVER_PORT = 12345
 
-difficulty_level = 3
+difficulty_level = 7
 all_tasks_queue = []
 
 timing = []
@@ -44,7 +43,7 @@ def poisson_problem_feeder():
     while True:
         dt = np.random.default_rng().exponential(1 / PROBLEM_GENERATION_POISSON_LAMBDA)
         all_tasks_queue.append(str(random.randint(1, 10)))
-        timing.append(time()-base_time)
+        timing.append(time() - base_time)
         sleep(dt)
         # if len(timing) > 10:
         #     plt.plot(timing, [0 for _ in range(len(timing))], 'o')
@@ -57,6 +56,7 @@ problem_feeder = poisson_problem_feeder
 
 # schedule_task = schedule.schedule_task_random
 schedule_task = schedule.schedule_task_tmlns
+
 
 # schedule_task = schedule.schedule_task_sjq
 
@@ -73,9 +73,10 @@ def manage_task(con, request):
 
 if __name__ == '__main__':
 
-    req = {"cmp_dmnd":100, "cmntn_dmnd":0.5}
+    req = {"cmp_dmnd": 100, "cmntn_dmnd": 0.5}
+
     endpoint = TCP4ServerEndpoint(reactor, CONTROLLER_SERVER_PORT)
     endpoint.listen(ControllerServerFactory(check_interval_ms=CHECK_INTERVAL_MS,
-                                            difficulty_level=difficulty_level, manage_task=manage_task, request= req))
+                                            difficulty_level=difficulty_level, manage_task=manage_task, request=req))
     reactor.callInThread(problem_feeder)
     reactor.run()
