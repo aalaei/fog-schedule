@@ -17,7 +17,6 @@ class FogClient(protocol.Protocol):
         self.FOG_SERVER_PORT = fog_server_port
         self.FOG_SERVER_IP = fog_server_ip
         print("Created")
-        reactor.callInThread(self.message_input)
         reactor.callInThread(update_status_func, self)
 
     @staticmethod
@@ -30,9 +29,6 @@ class FogClient(protocol.Protocol):
     def set_status(self, status):
         self.status = status
 
-    def message_input(self):
-        while True:
-            self.send_message(value=input("value:"), type=input("type:"))
 
     def connectionMade(self):
         self.send_message(type="id_req", value=1)

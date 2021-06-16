@@ -4,10 +4,17 @@ from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from time import sleep
 import numpy as np
+import sys
+import signal
+import sys
 
 '''user defined imports'''
 from controller_server import ControllerServerFactory
 import schedule
+from time import time
+from matplotlib import pyplot as plt
+
+
 # timing config
 CHECK_INTERVAL_MS = 1000
 SCHEDULE_INTERVAL_MS = 1000
@@ -23,6 +30,10 @@ CONTROLLER_SERVER_PORT = 12345
 difficulty_level = 3
 all_tasks_queue = []
 
+timing = []
+
+base_time = time()
+
 
 def simple_problem_feeder():
     while True:
@@ -32,9 +43,14 @@ def simple_problem_feeder():
 
 def poisson_problem_feeder():
     while True:
-        dt = np.random.default_rng().exponential(1/PROBLEM_GENERATION_POISSON_LAMBDA)
+        dt = np.random.default_rng().exponential(1 / PROBLEM_GENERATION_POISSON_LAMBDA)
         all_tasks_queue.append(str(random.randint(1, 10)))
+        timing.append(time()-base_time)
         sleep(dt)
+        # if len(timing) > 10:
+        #     plt.plot(timing, [0 for _ in range(len(timing))], 'o')
+        #     plt.show()
+        #     return
 
 
 problem_feeder = poisson_problem_feeder
