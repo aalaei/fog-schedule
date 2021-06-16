@@ -15,7 +15,7 @@ def verify_ans(chosen_task, ans, _difficulty_level):
 
 
 class ControllerClient(protocol.Protocol):
-    def __init__(self, chosen_task, task_id, _difficulty_level):
+    def __init__(self, chosen_task, task_id, _difficulty_level, set_communication_demand):
         self.is_info_known = False
         self.file_content = ""
         self.chosen_task = chosen_task
@@ -27,6 +27,7 @@ class ControllerClient(protocol.Protocol):
         self.task_done_time = None
         self.all_done_time = None
         self.problem_transfer_throughput = None
+        self.set_communication_demand = set_communication_demand
 
     def send_message(self, mes, is_binary=False):
         if is_binary:
@@ -38,6 +39,7 @@ class ControllerClient(protocol.Protocol):
         self.start_transmission_time = time()
         f = open(os.path.join("problems", "problem" + str(self.chosen_task) + ".txt"), "rb")
         self.file_content = f.read()
+        self.set_communication_demand(len(self.file_content))
         f.close()
         info = "{}/{}/{}".format(self.task_id, len(self.file_content), self._difficulty_level)
         self.send_message(info)
@@ -55,7 +57,7 @@ class ControllerClient(protocol.Protocol):
             self.all_done_time = time()
             if verify_ans(self.chosen_task, data, self._difficulty_level):
                 print(Fore.GREEN +
-                      "ans is verified taken Time={:.2f}+{:.2f}={:.2f}s,  R={:.2f} MBytes/s, Service Time={:.2f}s".format(
+                      "ans is verified taken Time={:.4f}+{:.4f}={:.4f}s,  R={:.2f} MBytes/s, Service Time={:.4f}s".format(
                           self.start_job_time - self.start_download_time,
                           self.task_done_time - self.start_job_time,
                           self.task_done_time - self.start_download_time,
@@ -70,10 +72,11 @@ class ControllerClient(protocol.Protocol):
 
 class ControllerClientFactory(ClFactory):
 
-    def __init__(self, chosen_task, task_id, _difficulty_level):
+    def __init__(self, chosen_task, task_id, _difficulty_level, set_communication_demand):
         self.chosen_task = chosen_task
         self.task_id = task_id
         self._difficulty_level = _difficulty_level
+        self.set_communication_demand = set_communication_demand
 
     def clientConnectionLost(self, connector, unused_reason):
         self.retry(connector)
@@ -83,4 +86,4 @@ class ControllerClientFactory(ClFactory):
         self.retry(connector)
 
     def buildProtocol(self, addr):
-        return ControllerClient(self.chosen_task, self.task_id, self._difficulty_level)
+        return ControllerClient(self.chosen_task, self.task_id, self._difficulty_level, self.set_communication_demand)

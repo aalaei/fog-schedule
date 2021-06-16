@@ -10,7 +10,7 @@ VERBOSE_MODE = True
 
 
 class ControllerServer(protocol.Protocol):
-    def __init__(self, clients: dict, my_id, status: Status, check_interval_ms, difficulty_level):
+    def __init__(self, clients: dict, my_id, status: Status, check_interval_ms, difficulty_level, request):
         self.my_id = my_id
         self.status = status
         self.clients = clients
@@ -18,6 +18,8 @@ class ControllerServer(protocol.Protocol):
         self.CHECK_INTERVAL_MS = check_interval_ms
         self.difficulty_level = difficulty_level
         self.chosen_task = None
+        self.request = request
+
         reactor.callInThread(self.ping_clients)
 
     def ping_clients(self):
@@ -100,7 +102,7 @@ class ControllerServer(protocol.Protocol):
                                                        str(data['value']).split("/")]
 
             endpoint2 = TCP4ClientEndpoint(reactor, fog_server_ip, fog_server_port)
-            endpoint2.connect(ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level))
+            endpoint2.connect(ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level, self.set_communication_demand))
             self.chosen_task = None
         else:
             pass
@@ -117,16 +119,23 @@ class ControllerServer(protocol.Protocol):
     def disconnect(self):
         del self.clients[self.my_id]
 
+    def set_communication_demand(self, demand):
+        self.request['cmntn_dmnd']=demand
+
+def difficulty2cmpdmnd(diff):
+    return diff
 
 class ControllerServerFactory(SrFactory):
-    def __init__(self, check_interval_ms, difficulty_level, manage_task):
+    def __init__(self, check_interval_ms, difficulty_level, manage_task, request):
         self.clients = {}
         self.last_id = 0
         self.status = Status(None)
         self.check_interval_ms = check_interval_ms
         self.difficulty_level = difficulty_level
-        reactor.callInThread(manage_task, self)
+        self.request = request
+        self.request['cmp_dmnd'] = difficulty2cmpdmnd(difficulty_level)
+        reactor.callInThread(manage_task, self, self.request)
 
     def buildProtocol(self, addr):
         self.last_id += 1
-        return ControllerServer(self.clients, self.last_id, self.status, self.check_interval_ms, self.difficulty_level)
+        return ControllerServer(self.clients, self.last_id, self.status, self.check_interval_ms, self.difficulty_level, self.request)

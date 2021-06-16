@@ -2,7 +2,7 @@ from twisted.internet import reactor, protocol
 from twisted.internet.protocol import ServerFactory as SrFactory, connectionDone
 import numpy as np
 from time import time
-VERBOSE_MODE = True
+VERBOSE_MODE = False
 
 
 class FogServer(protocol.Protocol):

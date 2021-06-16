@@ -1,12 +1,11 @@
 import random
+import sys
 
 from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from time import sleep
 import numpy as np
-import sys
-import signal
-import sys
+sys.path.insert(0, '..')
 
 '''user defined imports'''
 from controller_server import ControllerServerFactory
@@ -56,14 +55,16 @@ def poisson_problem_feeder():
 problem_feeder = poisson_problem_feeder
 # problem_feeder = simple_problem_feeder
 
-schedule_task = schedule.schedule_task_random
+# schedule_task = schedule.schedule_task_random
+schedule_task = schedule.schedule_task_tmlns
+
 # schedule_task = schedule.schedule_task_sjq
 
 
-def manage_task(con):
+def manage_task(con, request):
     while True:
         if len(all_tasks_queue) > 0 and len(con.clients) > 0:
-            client_id = schedule_task(con.clients)
+            client_id = schedule_task(con.clients, request=request)
             con.clients[client_id].chosen_task = eval(all_tasks_queue.pop(0))
             con.clients[client_id].send_message(value=1, type="comp_req")
             print("client #{} is chosen".format(client_id))
@@ -71,8 +72,10 @@ def manage_task(con):
 
 
 if __name__ == '__main__':
+
+    req = {"cmp_dmnd":100, "cmntn_dmnd":0.5}
     endpoint = TCP4ServerEndpoint(reactor, CONTROLLER_SERVER_PORT)
     endpoint.listen(ControllerServerFactory(check_interval_ms=CHECK_INTERVAL_MS,
-                                            difficulty_level=difficulty_level, manage_task=manage_task))
+                                            difficulty_level=difficulty_level, manage_task=manage_task, request= req))
     reactor.callInThread(problem_feeder)
     reactor.run()
