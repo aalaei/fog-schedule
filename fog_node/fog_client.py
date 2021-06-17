@@ -5,6 +5,7 @@ from time import time, sleep
 from twisted.internet import reactor, protocol
 from twisted.internet.protocol import ReconnectingClientFactory as ClFactory
 from status import Status
+from colorama import Fore, Style
 
 last_job_id = 1
 
@@ -38,6 +39,8 @@ class FogClient(protocol.Protocol):
         except UnicodeDecodeError or json.JSONDecodeError:
             print("Something went wrong :(", file=stderr)
             return
+        except:
+            print(Fore.RED + "Not able to parse json: {}".format(data) + Style.RESET_ALL)
 
         if data['type'] == 'error':
             print(data.get('value', "Unknown error"), file=stderr)

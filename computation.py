@@ -2,7 +2,7 @@ import hashlib
 import os
 import sys
 from time import time
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 import numpy as np
 
 
