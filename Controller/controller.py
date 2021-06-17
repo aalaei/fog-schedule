@@ -1,10 +1,11 @@
-import random
+import random, os
 import sys
 
 from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from time import sleep
 import numpy as np
+
 sys.path.insert(0, '..')
 
 '''user defined imports'''
@@ -56,8 +57,6 @@ problem_feeder = poisson_problem_feeder
 
 # schedule_task = schedule.schedule_task_random
 schedule_task = schedule.schedule_task_tmlns
-
-
 # schedule_task = schedule.schedule_task_sjq
 
 
@@ -70,7 +69,7 @@ def manage_task(con, request):
             #         client_id = con_name
             #         con.clients[con_name].initilized =True
             #         break
-                        
+
             if client_id is None:
                 client_id = schedule_task(con.clients, request=request)
             con.clients[client_id].chosen_task = eval(all_tasks_queue.pop(0))
@@ -79,12 +78,28 @@ def manage_task(con, request):
         sleep(SCHEDULE_INTERVAL_MS / 1000)
 
 
-if __name__ == '__main__':
+statistics_vector = []
 
+
+def add_new_info(obj):
+    statistics_vector.append(obj)
+    if len(sys.argv) > 1:
+        if len(statistics_vector) >= eval(sys.argv[1]):
+            f = open("result.txt", "w")
+            f.write(str(sum(statistics_vector) / len(statistics_vector)))
+            f.close()
+            reactor.stop()
+            print("result.txt file saved!")
+
+
+if __name__ == '__main__':
     req = {"cmp_dmnd": 100, "cmntn_dmnd": 0.5}
 
     endpoint = TCP4ServerEndpoint(reactor, CONTROLLER_SERVER_PORT)
-    endpoint.listen(ControllerServerFactory(check_interval_ms=CHECK_INTERVAL_MS,
-                                            difficulty_level=difficulty_level, manage_task=manage_task, request=req))
+    port = endpoint.listen(ControllerServerFactory(check_interval_ms=CHECK_INTERVAL_MS,
+                                                   difficulty_level=difficulty_level, manage_task=manage_task,
+                                                   request=req,
+                                                   add_new_info=add_new_info))
+
     reactor.callInThread(problem_feeder)
     reactor.run()

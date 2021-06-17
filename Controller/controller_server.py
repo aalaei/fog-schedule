@@ -11,7 +11,7 @@ VERBOSE_MODE = True
 
 
 class ControllerServer(protocol.Protocol):
-    def __init__(self, clients: dict, my_id, status: Status, check_interval_ms, difficulty_level, request):
+    def __init__(self, clients: dict, my_id, status: Status, check_interval_ms, difficulty_level, request, add_new_info):
         self.my_id = my_id
         self.status = status
         self.clients = clients
@@ -21,6 +21,7 @@ class ControllerServer(protocol.Protocol):
         self.chosen_task = None
         self.request = request
         self.initilized = False
+        self.add_new_info = add_new_info
 
         reactor.callInThread(self.ping_clients)
 
@@ -104,7 +105,7 @@ class ControllerServer(protocol.Protocol):
                                                        str(data['value']).split("/")]
 
             endpoint2 = TCP4ClientEndpoint(reactor, fog_server_ip, fog_server_port)
-            endpoint2.connect(ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level, self.set_communication_demand, self.my_id))
+            endpoint2.connect(ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level, self.set_communication_demand, self.my_id, self.add_new_info))
             self.chosen_task = None
         else:
             pass
@@ -126,7 +127,7 @@ class ControllerServer(protocol.Protocol):
 
 
 class ControllerServerFactory(SrFactory):
-    def __init__(self, check_interval_ms, difficulty_level, manage_task, request):
+    def __init__(self, check_interval_ms, difficulty_level, manage_task, request, add_new_info):
         self.clients = {}
         self.last_id = 0
         self.status = Status(None)
@@ -134,8 +135,10 @@ class ControllerServerFactory(SrFactory):
         self.difficulty_level = difficulty_level
         self.request = request
         self.request['cmp_dmnd'] = diff2dmnd(difficulty_level)
+        self.add_new_info = add_new_info
         reactor.callInThread(manage_task, self, self.request)
 
     def buildProtocol(self, addr):
         self.last_id += 1
-        return ControllerServer(self.clients, self.last_id, self.status, self.check_interval_ms, self.difficulty_level, self.request)
+        return ControllerServer(self.clients, self.last_id, self.status, self.check_interval_ms, self.difficulty_level,
+                                self.request, self.add_new_info)

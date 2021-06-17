@@ -17,16 +17,6 @@ from computation import computational_task, diff2dmnd
 from fog_client import FogClientFactory
 from fog_server import FogServerFactory
 
-CONTROLLER_SERVER_IP = "172.21.48.59"
-CONTROLLER_SERVER_PORT = 12345
-
-FOG_SERVER_IP = os.getenv("MY_IP", "127.0.0.1")
-
-# CONTROLLER_SERVER_IP = "127.0.0.1"
-# FOG_SERVER_IP = "127.0.0.1"
-
-FOG_SERVER_PORT = random.randint(10000, 65535)
-
 problem_prefix = "pr{}/".format(random.randint(1, 99999999))
 tasks_queue = []
 cmp_dmnd_vector = []
@@ -44,6 +34,8 @@ def manage_tasks(connections):
             cmp_dmnd_vector.pop(0)
             print("task {} is chosen".format(name))
             related_connections = [x for x in connections.clients.values() if str(x.task_id) == name]
+            if len(related_connections)<1:
+                return
             assert len(related_connections) == 1
             print("task {} is running".format(name))
             fog_server_obj = related_connections[0]
@@ -88,8 +80,20 @@ def update_status(conn):
 if __name__ == '__main__':
     if os.path.exists(problem_prefix) and os.path.isdir(problem_prefix):
         shutil.rmtree(problem_prefix)
-
     os.mkdir(problem_prefix)
+
+    CONTROLLER_SERVER_IP = "172.21.48.59"
+    CONTROLLER_SERVER_PORT = 12345
+    if len(sys.argv) > 2:
+        CONTROLLER_SERVER_IP = sys.argv[1]
+        CONTROLLER_SERVER_PORT = eval(sys.argv[2])
+    elif len(sys.argv) > 1:
+        CONTROLLER_SERVER_IP = sys.argv[1]
+
+    FOG_SERVER_IP = os.getenv("MY_IP", "127.0.0.1")
+
+    FOG_SERVER_PORT = random.randint(10000, 65535)
+
     endpoint = TCP4ClientEndpoint(reactor, CONTROLLER_SERVER_IP, CONTROLLER_SERVER_PORT)
     endpoint.connect(FogClientFactory(fog_server_ip=FOG_SERVER_IP, fog_server_port=FOG_SERVER_PORT
                                       , update_status_func=update_status))
