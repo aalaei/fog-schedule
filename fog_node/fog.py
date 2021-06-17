@@ -53,8 +53,8 @@ def manage_tasks(connections):
             fog_server_obj.task_done_time = time()
             ref_time = int(fog_server_obj.start_download_time)
             global cmntn_rate, cmp_cpcty
-            cmp_alpha = 0.2
-            cmntn_alpha = 0.2
+            cmp_alpha = 0.4
+            cmntn_alpha = 0.4
             cmntn_rate = cmntn_rate * (1 - cmntn_alpha) + cmntn_alpha * fog_server_obj.problem_transfer_throughput
             cmp_cpcty = cmp_cpcty * (1 - cmp_alpha) + cmp_alpha * \
                         (diff2dmnd(fog_server_obj.difficulty_level) / (
