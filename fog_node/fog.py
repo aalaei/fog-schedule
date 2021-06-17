@@ -30,7 +30,6 @@ problem_prefix = "pr{}/".format(random.randint(1, 99999999))
 tasks_queue = []
 cmp_dmnd_vector = []
 
-
 global cmntn_rate, cmp_cpcty
 cmntn_rate = 10485760
 cmp_cpcty = 10
@@ -53,10 +52,12 @@ def manage_tasks(connections):
             fog_server_obj.task_done_time = time()
             ref_time = int(fog_server_obj.start_download_time)
             global cmntn_rate, cmp_cpcty
-
-            cmntn_rate = fog_server_obj.problem_transfer_throughput
-            cmp_cpcty = diff2dmnd(fog_server_obj.difficulty_level) / \
-                        (fog_server_obj.task_done_time - fog_server_obj.start_job_time)
+            cmp_alpha = 0.05
+            cmntn_alpha = 0.05
+            cmntn_rate = cmntn_rate * (1 - cmntn_alpha) + cmntn_alpha * fog_server_obj.problem_transfer_throughput
+            cmp_cpcty = cmp_cpcty * (1 - cmp_alpha) + cmp_alpha * \
+                        (diff2dmnd(fog_server_obj.difficulty_level) / (
+                                fog_server_obj.task_done_time - fog_server_obj.start_job_time))
 
             fog_server_obj.send_message(struct.pack('dddQQ', fog_server_obj.start_download_time - ref_time,
                                                     fog_server_obj.start_job_time - ref_time,
