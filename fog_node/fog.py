@@ -16,13 +16,13 @@ from computation import computational_task, diff2dmnd
 from fog_client import FogClientFactory
 from fog_server import FogServerFactory
 
-# CONTROLLER_SERVER_IP = "172.21.48.59"
+CONTROLLER_SERVER_IP = "172.21.48.59"
 CONTROLLER_SERVER_PORT = 12345
 
-# FOG_SERVER_IP = "172.21.48.63"
+FOG_SERVER_IP = "172.21.48.63"
 
-CONTROLLER_SERVER_IP = "127.0.0.1"
-FOG_SERVER_IP = "127.0.0.1"
+# CONTROLLER_SERVER_IP = "127.0.0.1"
+# FOG_SERVER_IP = "127.0.0.1"
 
 FOG_SERVER_PORT = random.randint(10000, 65535)
 
