@@ -29,8 +29,8 @@ FOG_SERVER_PORT = random.randint(10000, 65535)
 problem_prefix = "pr{}/".format(random.randint(1, 99999999))
 tasks_queue = []
 global cmntn_rate, cmp_cpcty
-cmntn_rate = 1e10
-cmp_cpcty = 1e10
+cmntn_rate = 10485760
+cmp_cpcty = 10
 
 
 def manage_tasks(connections):
