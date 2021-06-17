@@ -2,6 +2,7 @@ from twisted.internet import reactor, protocol
 from twisted.internet.protocol import ServerFactory as SrFactory, connectionDone
 import numpy as np
 from time import time, sleep
+from computation import diff2dmnd
 import sys
 
 VERBOSE_MODE = False
@@ -62,7 +63,7 @@ class FogServer(protocol.Protocol):
 
             print("network: task {} is downloaded completely R={:.2f} MBytes/s"
                   .format(self.task_id, self.problem_transfer_throughput/1048576))
-            self.enqueue_task(str(self.task_id))
+            self.enqueue_task(str(self.task_id), diff2dmnd(self.difficulty_level))
 
     def connectionLost(self, reason=connectionDone):
         self.disconnect()

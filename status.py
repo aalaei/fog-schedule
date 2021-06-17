@@ -10,6 +10,7 @@ class Status:
             self.cmp_cpcty = obj['cmp_cpcty']
             self.cmntn_rate = obj['cmntn_rate']
             self.power = obj['power']
+            self.q_v = obj['q_v']
         else:
             self.id = -1
             self.rssi = 0
@@ -17,11 +18,12 @@ class Status:
             self.cmntn_rate = 1e-5
             self.power = 1e-5
 
+            self.q_v = 0
             self.q_len = 0
 
     def __str__(self):
-        return "id: {}, rssi: {:.2f}, q_len: {}, cmp_cpcty: {:.4f}, cmntn_rate: {:.2f} MBytes/s, Power: {:.2f}W".format(
-            self.id, self.rssi, self.q_len, self.cmp_cpcty, self.cmntn_rate/1048576, self.power)
+        return "id: {}, q_v: {:.2f}, q_len: {}, cmp_cpcty: {:.4f}, cmntn_rate: {:.2f} MBytes/s, Power: {:.2f}W".format(
+            self.id, self.q_v, self.q_len, self.cmp_cpcty, self.cmntn_rate/1048576, self.power)
 
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__)

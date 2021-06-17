@@ -28,6 +28,9 @@ FOG_SERVER_PORT = random.randint(10000, 65535)
 
 problem_prefix = "pr{}/".format(random.randint(1, 99999999))
 tasks_queue = []
+cmp_dmnd_vector = []
+
+
 global cmntn_rate, cmp_cpcty
 cmntn_rate = 10485760
 cmp_cpcty = 10
@@ -38,6 +41,7 @@ def manage_tasks(connections):
         sleep(0.001)
         if len(tasks_queue) > 0:
             name = tasks_queue.pop(0)
+            cmp_dmnd_vector.pop(0)
             print("task {} is chosen".format(name))
             related_connections = [x for x in connections.clients.values() if str(x.task_id) == name]
             assert len(related_connections) == 1
@@ -63,8 +67,9 @@ def manage_tasks(connections):
             # fog_server_obj.transport.loseConnection()
 
 
-def enqueue_task(name):
+def enqueue_task(name, cmp_dmnd):
     tasks_queue.append(name)
+    cmp_dmnd_vector.append(cmp_dmnd)
 
 
 def update_status(conn):
@@ -72,6 +77,7 @@ def update_status(conn):
     while True:
         conn.status.rssi = random.random()
         conn.status.q_len = len(tasks_queue)
+        conn.status.q_v = sum(cmp_dmnd_vector)
         conn.status.cmp_cpcty = cmp_cpcty
         conn.status.cmntn_rate = cmntn_rate
         sleep(0.1)

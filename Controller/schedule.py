@@ -26,7 +26,7 @@ def schedule_task_service_time(fogs: dict, request):
         client_ids.append(fog)
         t = ((request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty)
              + (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate) + (
-                     fogs[fog].status.q_len / fogs[fog].status.cmp_cpcty))
+                     fogs[fog].status.q_v / fogs[fog].status.cmp_cpcty))
         service_times.append(t)
         print(Fore.YELLOW + "client {}: ServiceTime={:.4f}".format(fog, t) + Style.RESET_ALL)
 
@@ -43,7 +43,7 @@ def schedule_task_service_time(fogs: dict, request):
 
 
 def schedule_task_tmlns(fogs: dict, request):
-    V = 1000
+    v = 1000
     client_ids = []
     service_times = []
 
@@ -51,8 +51,8 @@ def schedule_task_tmlns(fogs: dict, request):
         client_ids.append(fog)
         t = ((request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty)
              + (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate) + (
-                     fogs[fog].status.q_len / fogs[fog].status.cmp_cpcty))
-        service_times.append(t*V + fogs[fog].status.q_len)
+                     fogs[fog].status.q_v / fogs[fog].status.cmp_cpcty))
+        service_times.append(t*v + fogs[fog].status.q_v)
         print(Fore.YELLOW + "client {}: ServiceTime={:.4f}".format(fog, t) + Style.RESET_ALL)
 
     service_times = np.array(service_times)
