@@ -4,6 +4,7 @@ import shutil
 import struct
 import sys
 from time import time, sleep
+import os
 
 from colorama import Fore, Style
 from twisted.internet import reactor
@@ -19,7 +20,7 @@ from fog_server import FogServerFactory
 CONTROLLER_SERVER_IP = "172.21.48.59"
 CONTROLLER_SERVER_PORT = 12345
 
-FOG_SERVER_IP = "172.21.48.63"
+FOG_SERVER_IP = os.getenv("MY_IP", "127.0.0.1")
 
 # CONTROLLER_SERVER_IP = "127.0.0.1"
 # FOG_SERVER_IP = "127.0.0.1"
