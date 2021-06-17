@@ -20,6 +20,7 @@ class ControllerServer(protocol.Protocol):
         self.difficulty_level = difficulty_level
         self.chosen_task = None
         self.request = request
+        self.initilized = False
 
         reactor.callInThread(self.ping_clients)
 
@@ -103,7 +104,7 @@ class ControllerServer(protocol.Protocol):
                                                        str(data['value']).split("/")]
 
             endpoint2 = TCP4ClientEndpoint(reactor, fog_server_ip, fog_server_port)
-            endpoint2.connect(ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level, self.set_communication_demand))
+            endpoint2.connect(ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level, self.set_communication_demand, self.my_id))
             self.chosen_task = None
         else:
             pass

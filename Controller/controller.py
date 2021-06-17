@@ -64,7 +64,15 @@ schedule_task = schedule.schedule_task_tmlns
 def manage_task(con, request):
     while True:
         if len(all_tasks_queue) > 0 and len(con.clients) > 0:
-            client_id = schedule_task(con.clients, request=request)
+            client_id = None
+            # for con_name in con.clients.keys():
+            #     if not con.clients[con_name].initilized:
+            #         client_id = con_name
+            #         con.clients[con_name].initilized =True
+            #         break
+                        
+            if client_id is None:
+                client_id = schedule_task(con.clients, request=request)
             con.clients[client_id].chosen_task = eval(all_tasks_queue.pop(0))
             con.clients[client_id].send_message(value=1, type="comp_req")
             print("client #{} is chosen".format(client_id))
