@@ -20,7 +20,7 @@ class ControllerServer(protocol.Protocol):
         self.difficulty_level = difficulty_level
         self.chosen_task = None
         self.request = request
-        self.initilized = False
+        self.initialized = False
         self.add_new_info = add_new_info
 
         reactor.callInThread(self.ping_clients)
@@ -105,10 +105,18 @@ class ControllerServer(protocol.Protocol):
                                                        str(data['value']).split("/")]
 
             endpoint2 = TCP4ClientEndpoint(reactor, fog_server_ip, fog_server_port)
-            endpoint2.connect(ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level, self.set_communication_demand, self.my_id, self.add_new_info))
+            endpoint2.connect(
+                ControllerClientFactory(self.chosen_task, task_id, self.difficulty_level, self.set_communication_demand,
+                                        self.my_id, self.add_new_info_server, self.request['deadlineTime'])
+            )
             self.chosen_task = None
         else:
             pass
+
+    def add_new_info_server(self, client_object):
+        server_object = {"power": self.status.power,
+                         "backLock": self.status.q_v}
+        self.add_new_info(client_object, server_object, self.my_id)
 
     def dataReceived(self, data):
         data = data.decode("utf-8")

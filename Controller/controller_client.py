@@ -15,7 +15,8 @@ def verify_ans(chosen_task, ans, _difficulty_level):
 
 
 class ControllerClient(protocol.Protocol):
-    def __init__(self, chosen_task, task_id, _difficulty_level, set_communication_demand, fog_id, add_new_info):
+    def __init__(self, chosen_task, task_id, _difficulty_level, set_communication_demand, fog_id, add_new_info,
+                 deadline_time):
         self.is_info_known = False
         self.file_content = ""
         self.chosen_task = chosen_task
@@ -30,6 +31,7 @@ class ControllerClient(protocol.Protocol):
         self.set_communication_demand = set_communication_demand
         self.fog_id = fog_id
         self.add_new_info = add_new_info
+        self.deadline_time = deadline_time
 
     def send_message(self, mes, is_binary=False):
         if is_binary:
@@ -58,16 +60,21 @@ class ControllerClient(protocol.Protocol):
             print("ans: {} is received from fog server".format(data))
             self.all_done_time = time()
             if verify_ans(self.chosen_task, data, self._difficulty_level):
+                service_time = self.all_done_time - self.start_transmission_time
                 print(Fore.GREEN +
                       "ans is verified from {}/ Time={:.4f}+{:.4f}={:.4f}s,  R={:.2f} MBytes/s, Service Time={:.4f}s".format(
                           self.fog_id,
                           self.start_job_time - self.start_download_time,
                           self.task_done_time - self.start_job_time,
                           self.task_done_time - self.start_download_time,
-                          self.problem_transfer_throughput/1048576,
-                          self.all_done_time - self.start_transmission_time)
+                          self.problem_transfer_throughput / 1048576,
+                          service_time)
                       + Style.RESET_ALL)
-                self.add_new_info(self.all_done_time - self.start_transmission_time)
+
+                statistics_obj = {"serviceTime": service_time,
+                                  "deadline": service_time > self.deadline_time
+                                  }
+                self.add_new_info(statistics_obj)
 
             else:
                 print(Fore.RED + "ans is not verified" + Style.RESET_ALL)
@@ -76,13 +83,15 @@ class ControllerClient(protocol.Protocol):
 
 class ControllerClientFactory(ClFactory):
 
-    def __init__(self, chosen_task, task_id, _difficulty_level, set_communication_demand, fog_id, add_new_info):
+    def __init__(self, chosen_task, task_id, _difficulty_level, set_communication_demand, fog_id, add_new_info,
+                 deadline_time):
         self.chosen_task = chosen_task
         self.task_id = task_id
         self._difficulty_level = _difficulty_level
         self.set_communication_demand = set_communication_demand
         self.fog_id = fog_id
         self.add_new_info = add_new_info
+        self.deadline_time = deadline_time
 
     def clientConnectionLost(self, connector, unused_reason):
         self.retry(connector)
@@ -91,6 +100,6 @@ class ControllerClientFactory(ClFactory):
         print(reason)
         self.retry(connector)
 
-
     def buildProtocol(self, addr):
-        return ControllerClient(self.chosen_task, self.task_id, self._difficulty_level, self.set_communication_demand, self.fog_id, self.add_new_info)
+        return ControllerClient(self.chosen_task, self.task_id, self._difficulty_level, self.set_communication_demand,
+                                self.fog_id, self.add_new_info, self.deadline_time)

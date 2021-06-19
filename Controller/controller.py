@@ -1,3 +1,4 @@
+import json
 import random, os
 import sys
 
@@ -5,6 +6,7 @@ from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from time import sleep
 import numpy as np
+from colorama import Fore, Style
 
 sys.path.insert(0, '..')
 
@@ -57,6 +59,8 @@ problem_feeder = poisson_problem_feeder
 
 # schedule_task = schedule.schedule_task_random
 schedule_task = schedule.schedule_task_tmlns
+
+
 # schedule_task = schedule.schedule_task_sjq
 
 
@@ -78,22 +82,54 @@ def manage_task(con, request):
         sleep(SCHEDULE_INTERVAL_MS / 1000)
 
 
-statistics_vector = []
+statistics_vector = {}
 
 
-def add_new_info(obj):
-    statistics_vector.append(obj)
+def add_new_info(client_obj, server_obj, fog_id):
+    client_obj.update(server_obj)
+    statistics_list = statistics_vector.get(fog_id, list())
+    statistics_list.append(client_obj)
+    statistics_vector[fog_id] = statistics_list
     if len(sys.argv) > 1:
-        if len(statistics_vector) >= eval(sys.argv[1]):
-            f = open("result.txt", "w")
-            f.write(str(sum(statistics_vector) / len(statistics_vector)))
+        all_tasks_cnt = eval(sys.argv[1])
+        done_task_cnt = sum([len(x) for x in statistics_vector.values()])
+        print(Fore.CYAN + "done tasks({:.1f}%) {}/{}"
+              .format(done_task_cnt / all_tasks_cnt * 100, done_task_cnt, all_tasks_cnt)
+              + Style.RESET_ALL)
+        if done_task_cnt >= all_tasks_cnt:
+            f = open("result.json", "w")
+            file_content = {"backLock": {x: statistics_vector.get(x)[-1]['backLock'] for x in statistics_vector.keys()},
+                            "power": {
+                                x: sum([y['power'] for y in statistics_vector.get(x)]) / len(
+                                    statistics_vector.get(x))
+                                for x in statistics_vector.keys()},
+                            "serviceTime": {
+                                x: sum([y['serviceTime'] for y in statistics_vector.get(x)]) / len(
+                                    statistics_vector.get(x))
+                                for x in statistics_vector.keys()},
+                            "deadline": {
+                                x: len([y for y in statistics_vector.get(x) if y['deadline'] is True])
+                                for x in statistics_vector.keys()
+                            }}
+
+            backlock_sum = sum([x[-1]['backLock'] for x in statistics_vector.values()])
+            power_sum = sum([sum([y['power'] for y in x]) for x in statistics_vector.values()])
+            service_time = sum([sum([y['serviceTime'] for y in x]) for x in statistics_vector.values()])
+            deadline_cnt = sum([len([y['deadline'] for y in x]) for x in statistics_vector.values()])
+            file_content["total"] = {"total backLock": backlock_sum,
+                                     "Average power": power_sum/done_task_cnt,
+                                     "Average serviceTime": service_time/done_task_cnt,
+                                     "total deadline": deadline_cnt
+                                     }
+
+            f.write(json.dumps(file_content, indent=4))
             f.close()
             reactor.stop()
-            print("result.txt file saved!")
+            print("result.json file saved!")
 
 
 if __name__ == '__main__':
-    req = {"cmp_dmnd": 100, "cmntn_dmnd": 0.5}
+    req = {"cmp_dmnd": 100, "cmntn_dmnd": 0.5, "deadlineTime": 40}
 
     endpoint = TCP4ServerEndpoint(reactor, CONTROLLER_SERVER_PORT)
     port = endpoint.listen(ControllerServerFactory(check_interval_ms=CHECK_INTERVAL_MS,
