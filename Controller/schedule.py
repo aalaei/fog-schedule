@@ -56,9 +56,9 @@ def schedule_task_AFC(fogs: dict, request):
         service_times.append(t * v + fogs[fog].status.q_v)
         e_cpu = (request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty) * fogs[fog].status.cpu_power
         e_network = (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate) * fogs[fog].status.network_power
-        energy.append(e_cpu+e_network)
+        energy.append(e_cpu + e_network)
 
-        print(Fore.YELLOW + "client {}: ServiceTime={:.4f}, Energy: {:.04f}".format(fog, t, e_cpu+e_network)
+        print(Fore.YELLOW + "client {}: ServiceTime={:.4f}, Energy: {:.04f}".format(fog, t, e_cpu + e_network)
               + Style.RESET_ALL)
 
     service_times = np.array(service_times)
@@ -73,10 +73,23 @@ def schedule_task_AFC(fogs: dict, request):
     return client_id
 
 
+h_i_t = {}
+z_i_t = {}
+global g_t
+g_t = 0
+
+
 def schedule_task_tmlns(fogs: dict, request):
     v = 1000
     client_ids = []
     DpP = []
+    C_D = 1  # ??
+    C_L = 1  # ??
+
+    B_max = max([fog.status.cmp_cpcty for fog in fogs.values()])
+    q_v_average = sum([x.status.q_v for x in fogs.values()]) / len(fogs.keys())
+    f_t = request['cmp_dmnd'] / request['cmntn_dmnd'] - C_L
+    global g_t
 
     for fog in fogs.keys():
         client_ids.append(fog)
@@ -86,11 +99,22 @@ def schedule_task_tmlns(fogs: dict, request):
         e_cpu = (request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty) * fogs[fog].status.cpu_power
         e_network = (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate) * fogs[fog].status.network_power
         total_energy = e_network + e_cpu
+        Q_t = fogs[fog].status.q_v + request['cmp_dmnd']
 
-        DpP.append((total_energy * v) + t + fogs[fog].status.q_v)
+        v_i = fogs[fog].status.cmp_cpcty / B_max
+        g_i = fogs[fog].status.q_v / v_i - q_v_average
 
-        print(Fore.YELLOW + "client {}: ServiceTime={:.4f}, Energy: {:.04f}".format(fog, t,total_energy)
+        y_t = max(0, t - request['deadlineTime']) - C_D
+
+        DpP.append(total_energy * v + Q_t * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t + g_t * f_t)
+
+        print(Fore.YELLOW + "client {}: ServiceTime={:.4f}, Energy: {:.04f}".format(fog, t, total_energy)
               + Style.RESET_ALL)
+
+        h_i_t[fog] = h_i_t.get(fog, 0) + g_i
+        z_i_t[fog] = max(z_i_t.get(fog, 0) + y_t, 0)
+
+    g_t = max(0, g_t + f_t)
 
     np_DpPs = np.array(DpP)
     client_ids = np.array(client_ids)
