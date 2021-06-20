@@ -114,7 +114,8 @@ class ControllerServer(protocol.Protocol):
             pass
 
     def add_new_info_server(self, client_object):
-        server_object = {"power": self.status.power,
+        server_object = {"cpu_power": self.status.cpu_power,
+                         "network_power": self.status.network_power,
                          "backLock": self.status.q_v}
         self.add_new_info(client_object, server_object, self.my_id, self)
 

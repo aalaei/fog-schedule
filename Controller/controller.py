@@ -54,8 +54,8 @@ def poisson_problem_feeder():
         #     return
 
 
-problem_feeder = poisson_problem_feeder
-# problem_feeder = simple_problem_feeder
+# problem_feeder = poisson_problem_feeder
+problem_feeder = simple_problem_feeder
 
 # schedule_task = schedule.schedule_task_random
 schedule_task = schedule.schedule_task_tmlns
@@ -87,6 +87,11 @@ statistics_vector = {}
 
 def add_new_info(client_obj, server_obj, fog_id, obj):
     client_obj.update(server_obj)
+
+    cpu_energy = client_obj['cpu_time']*obj.status.cpu_power
+    network_energy = client_obj['network_time'] * obj.status.network_power
+    client_obj['energy'] = cpu_energy + network_energy
+
     statistics_list = statistics_vector.get(fog_id, list())
     statistics_list.append(client_obj)
     statistics_vector[fog_id] = statistics_list
@@ -100,8 +105,11 @@ def add_new_info(client_obj, server_obj, fog_id, obj):
             f = open("result.json", "w")
             file_content = {"backLock": {x: statistics_vector.get(x)[-1]['backLock'] for x in statistics_vector.keys()},
                             "power": {
-                                x: sum([y['power'] for y in statistics_vector.get(x)]) / len(
+                                x: sum([y['network_power'] + y['cpu_power'] for y in statistics_vector.get(x)]) / len(
                                     statistics_vector.get(x))
+                                for x in statistics_vector.keys()},
+                            "energy": {
+                                x: sum([y['energy'] for y in statistics_vector.get(x)])
                                 for x in statistics_vector.keys()},
                             "serviceTime": {
                                 x: sum([y['serviceTime'] for y in statistics_vector.get(x)]) / len(
@@ -113,13 +121,15 @@ def add_new_info(client_obj, server_obj, fog_id, obj):
                             }}
 
             backlock_sum = sum([x[-1]['backLock'] for x in statistics_vector.values()])
-            power_sum = sum([sum([y['power'] for y in x]) for x in statistics_vector.values()])
+            power_sum = sum([sum([y['network_power'] + y['cpu_power'] for y in x]) for x in statistics_vector.values()])
+            energy_sum = sum([sum([y['energy'] for y in x]) for x in statistics_vector.values()])
             service_time = sum([sum([y['serviceTime'] for y in x]) for x in statistics_vector.values()])
             deadline_cnt = sum([len([y['deadline'] for y in x if y['deadline'] is True]) for x in statistics_vector.values()])
             file_content["total"] = {"total backLock": backlock_sum,
                                      "Average power": power_sum/done_task_cnt,
                                      "Average serviceTime": service_time/done_task_cnt,
-                                     "total deadline": deadline_cnt
+                                     "total deadline": deadline_cnt,
+                                     "total energy": energy_sum
                                      }
 
             f.write(json.dumps(file_content, indent=4))

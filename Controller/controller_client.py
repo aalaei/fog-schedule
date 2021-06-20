@@ -24,6 +24,7 @@ class ControllerClient(protocol.Protocol):
         self._difficulty_level = _difficulty_level
         self.start_transmission_time = None
         self.start_download_time = None
+        self.end_download_time = None
         self.start_job_time = None
         self.task_done_time = None
         self.all_done_time = None
@@ -54,8 +55,8 @@ class ControllerClient(protocol.Protocol):
             self.is_info_known = True
         else:
 
-            decoded_tuple = struct.unpack('dddQQ', data)
-            (self.start_download_time, self.start_job_time, self.task_done_time, self.problem_transfer_throughput,
+            decoded_tuple = struct.unpack('ddddQQ', data)
+            (self.start_download_time, self.end_download_time, self.start_job_time, self.task_done_time, self.problem_transfer_throughput,
              data) = decoded_tuple
             print("ans: {} is received from fog server".format(data))
             self.all_done_time = time()
@@ -72,8 +73,11 @@ class ControllerClient(protocol.Protocol):
                       + Style.RESET_ALL)
 
                 statistics_obj = {"serviceTime": service_time,
-                                  "deadline": service_time > self.deadline_time
+                                  "deadline": service_time > self.deadline_time,
+                                  "cpu_time": self.task_done_time - self.start_job_time,
+                                  "network_time": self.end_download_time - self.start_download_time,
                                   }
+
                 self.add_new_info(statistics_obj)
 
             else:
