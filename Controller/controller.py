@@ -85,7 +85,7 @@ def manage_task(con, request):
 statistics_vector = {}
 
 
-def add_new_info(client_obj, server_obj, fog_id):
+def add_new_info(client_obj, server_obj, fog_id, obj):
     client_obj.update(server_obj)
     statistics_list = statistics_vector.get(fog_id, list())
     statistics_list.append(client_obj)
@@ -115,7 +115,7 @@ def add_new_info(client_obj, server_obj, fog_id):
             backlock_sum = sum([x[-1]['backLock'] for x in statistics_vector.values()])
             power_sum = sum([sum([y['power'] for y in x]) for x in statistics_vector.values()])
             service_time = sum([sum([y['serviceTime'] for y in x]) for x in statistics_vector.values()])
-            deadline_cnt = sum([len([y['deadline'] for y in x]) for x in statistics_vector.values()])
+            deadline_cnt = sum([len([y['deadline'] for y in x if y['deadline'] is True]) for x in statistics_vector.values()])
             file_content["total"] = {"total backLock": backlock_sum,
                                      "Average power": power_sum/done_task_cnt,
                                      "Average serviceTime": service_time/done_task_cnt,
@@ -126,6 +126,8 @@ def add_new_info(client_obj, server_obj, fog_id):
             f.close()
             reactor.stop()
             print("result.json file saved!")
+            for cl in obj.clients.values():
+                cl.transport.loseConnection()
 
 
 if __name__ == '__main__':

@@ -116,7 +116,7 @@ class ControllerServer(protocol.Protocol):
     def add_new_info_server(self, client_object):
         server_object = {"power": self.status.power,
                          "backLock": self.status.q_v}
-        self.add_new_info(client_object, server_object, self.my_id)
+        self.add_new_info(client_object, server_object, self.my_id, self)
 
     def dataReceived(self, data):
         data = data.decode("utf-8")
