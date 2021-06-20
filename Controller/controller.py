@@ -28,7 +28,7 @@ PROBLEM_GENERATION_POISSON_OBSERVATION_TIME = 10
 # network config
 CONTROLLER_SERVER_PORT = 12345
 
-difficulty_level = 7
+difficulty_level = 6
 all_tasks_queue = []
 
 timing = []
