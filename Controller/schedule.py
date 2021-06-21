@@ -58,7 +58,7 @@ def schedule_task_AFC(fogs: dict, request):
         e_network = (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate) * fogs[fog].status.network_power
         energy.append(e_cpu + e_network)
 
-        print(Fore.YELLOW + "client {}: ServiceTime={:.4f}, Energy: {:.04f}".format(fog, t, e_cpu + e_network)
+        print(Fore.YELLOW + "fog{}: ServiceTime={:.4f}, Energy: {:.04f}".format(fog, t, e_cpu + e_network)
               + Style.RESET_ALL)
 
     service_times = np.array(service_times)
@@ -107,14 +107,14 @@ def schedule_task_tmlns(fogs: dict, request):
         g_i = fogs[fog].status.q_v / v_i - q_v_average
 
         y_t = max(0, service_time - request['deadlineTime']) - C_D
-
-        # DpP.append(total_energy * v + Q_t * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t + g_t * f_t)
-        DpP.append(total_energy * v + pow(Q_t, 2) * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t)
-        # DpP.append(total_energy * v + pow(Q_t, 2) + service_time)
+        # single_DpP = total_energy * v + Q_t * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t + g_t * f_t
+        single_DpP = total_energy * v + pow(Q_t, 2) * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t
+        # single_DpP = total_energy * v + pow(Q_t, 2) + service_time
+        DpP.append(single_DpP)
 
         print(Fore.YELLOW +
-              "client {}: ServiceTime={:.4f}, (Energy){:.04f} * (V){}+(Qt){:.4f}*((h){:.4f}/(vi){:.4f}+1)+(z){:.4f}*(y){:.4f}"
-              .format(fog, service_time, total_energy, v, Q_t, h_i_t.get(fog, 0), v_i, z_i_t.get(fog, 0), y_t)
+              "fog{}: t={:.4f}, (E){:.04f} * (V){}+(Qt){:.4f}*((h){:.4f}/(vi){:.4f}+1)+(z){:.4f}*(y){:.4f}={:.4f}"
+              .format(fog, service_time, total_energy, v, Q_t, h_i_t.get(fog, 0), v_i, z_i_t.get(fog, 0), y_t, single_DpP)
               + Style.RESET_ALL)
 
         h_i_t[fog] = h_i_t.get(fog, 0) + g_i

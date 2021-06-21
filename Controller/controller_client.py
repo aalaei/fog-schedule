@@ -63,9 +63,10 @@ class ControllerClient(protocol.Protocol):
             if verify_ans(self.chosen_task, data, self._difficulty_level):
                 service_time = self.all_done_time - self.start_transmission_time
                 print(Fore.GREEN +
-                      "ans is verified from {}/ Time={:.4f}+{:.4f}={:.4f}s,  R={:.2f} MBytes/s, Service Time={:.4f}s".format(
+                      "ans is verified from {}/ Time={:.4f}+{:.4f}+{:.4f}={:.4f}s,  R={:.2f} MBytes/s, Service Time={:.4f}s".format(
                           self.fog_id,
-                          self.start_job_time - self.start_download_time,
+                          self.end_download_time - self.start_download_time,
+                          self.start_job_time - self.end_download_time,
                           self.task_done_time - self.start_job_time,
                           self.task_done_time - self.start_download_time,
                           self.problem_transfer_throughput / 1048576,

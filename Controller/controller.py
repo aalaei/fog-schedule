@@ -84,22 +84,33 @@ def manage_task(con, request):
 
 statistics_vector = {}
 
+global base_time2
+base_time2 = None
+
 
 def add_new_info(client_obj, server_obj, fog_id, obj):
     client_obj.update(server_obj)
+    global base_time2
+    if base_time2 is None:
+        base_time2 = time()
 
-    cpu_energy = client_obj['cpu_time']*obj.status.cpu_power
+    cpu_energy = client_obj['cpu_time'] * obj.status.cpu_power
     network_energy = client_obj['network_time'] * obj.status.network_power
     client_obj['energy'] = cpu_energy + network_energy
 
     statistics_list = statistics_vector.get(fog_id, list())
     statistics_list.append(client_obj)
     statistics_vector[fog_id] = statistics_list
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 2:
         all_tasks_cnt = eval(sys.argv[1])
-        done_task_cnt = sum([len(x) for x in statistics_vector.values()])
-        print(Fore.CYAN + "done tasks({:.1f}%) {}/{}"
-              .format(done_task_cnt / all_tasks_cnt * 100, done_task_cnt, all_tasks_cnt)
+        termination_type = sys.argv[2]
+        if termination_type.lower() == 's':
+            done_task_cnt = time() - base_time2
+        else:
+            done_task_cnt = sum([len(x) for x in statistics_vector.values()])
+        print(Fore.CYAN + "done tasks({:.1f}%) {}/{}{}"
+              .format(done_task_cnt / all_tasks_cnt * 100, int(10000*done_task_cnt)/10000,
+                      all_tasks_cnt, termination_type)
               + Style.RESET_ALL)
         if done_task_cnt >= all_tasks_cnt:
             f = open("result.json", "w")
