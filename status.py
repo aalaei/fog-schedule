@@ -15,10 +15,10 @@ class Status:
         else:
             self.id = -1
             self.rssi = 0
-            self.cmp_cpcty = 1e-5
-            self.cmntn_rate = 1e-5
-            self.cpu_power = 1e-5
-            self.network_power = 1e-5
+            self.cmntn_rate = 10485760
+            self.cmp_cpcty = 10
+            self.cpu_power = 0
+            self.network_power = 0
 
             self.q_v = 0
             self.q_len = 0

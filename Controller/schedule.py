@@ -83,7 +83,7 @@ def schedule_task_tmlns(fogs: dict, request):
     v = 1000
     client_ids = []
     DpP = []
-    C_D = 1  # ??
+    C_D = 0  # ??
     C_L = 1  # ??
 
     B_max = max([fog.status.cmp_cpcty for fog in fogs.values()])
@@ -93,9 +93,11 @@ def schedule_task_tmlns(fogs: dict, request):
 
     for fog in fogs.keys():
         client_ids.append(fog)
-        t = ((request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty)
-             + (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate) + (
-                     fogs[fog].status.q_v / fogs[fog].status.cmp_cpcty))
+        cmp_service_time = (request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty)
+        cmntn_service_time = (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate)
+        waiting_service_time = fogs[fog].status.q_v / fogs[fog].status.cmp_cpcty
+        service_time = cmp_service_time + cmntn_service_time + waiting_service_time
+
         e_cpu = (request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty) * fogs[fog].status.cpu_power
         e_network = (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate) * fogs[fog].status.network_power
         total_energy = e_network + e_cpu
@@ -104,11 +106,15 @@ def schedule_task_tmlns(fogs: dict, request):
         v_i = fogs[fog].status.cmp_cpcty / B_max
         g_i = fogs[fog].status.q_v / v_i - q_v_average
 
-        y_t = max(0, t - request['deadlineTime']) - C_D
+        y_t = max(0, service_time - request['deadlineTime']) - C_D
 
-        DpP.append(total_energy * v + Q_t * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t + g_t * f_t)
+        # DpP.append(total_energy * v + Q_t * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t + g_t * f_t)
+        DpP.append(total_energy * v + pow(Q_t, 2) * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t)
+        # DpP.append(total_energy * v + pow(Q_t, 2) + service_time)
 
-        print(Fore.YELLOW + "client {}: ServiceTime={:.4f}, Energy: {:.04f}".format(fog, t, total_energy)
+        print(Fore.YELLOW +
+              "client {}: ServiceTime={:.4f}, (Energy){:.04f} * (V){}+(Qt){:.4f}*((h){:.4f}/(vi){:.4f}+1)+(z){:.4f}*(y){:.4f}"
+              .format(fog, service_time, total_energy, v, Q_t, h_i_t.get(fog, 0), v_i, z_i_t.get(fog, 0), y_t)
               + Style.RESET_ALL)
 
         h_i_t[fog] = h_i_t.get(fog, 0) + g_i
