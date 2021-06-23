@@ -75,8 +75,9 @@ def schedule_task_AFC(fogs: dict, request):
 
 h_i_t = {}
 z_i_t = {}
-global g_t
+global g_t, z_t
 g_t = 0
+z_t = 0
 
 
 def schedule_task_tmlns(fogs: dict, request):
@@ -85,11 +86,12 @@ def schedule_task_tmlns(fogs: dict, request):
     DpP = []
     C_D = 0  # ??
     C_L = 1  # ??
+    service_times = {}
 
     B_max = max([fog.status.cmp_cpcty for fog in fogs.values()])
     q_v_average = sum([x.status.q_v for x in fogs.values()]) / len(fogs.keys())
     f_t = request['cmp_dmnd'] / request['cmntn_dmnd'] - C_L
-    global g_t
+    global g_t, z_t
 
     for fog in fogs.keys():
         client_ids.append(fog)
@@ -97,6 +99,7 @@ def schedule_task_tmlns(fogs: dict, request):
         cmntn_service_time = (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate)
         waiting_service_time = fogs[fog].status.q_v / fogs[fog].status.cmp_cpcty
         service_time = cmp_service_time + cmntn_service_time + waiting_service_time
+        service_times[fog] = service_time
 
         e_cpu = (request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty) * fogs[fog].status.cpu_power
         e_network = (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate) * fogs[fog].status.network_power
@@ -120,9 +123,12 @@ def schedule_task_tmlns(fogs: dict, request):
         h_i_t[fog] = h_i_t.get(fog, 0) + g_i
         z_i_t[fog] = max(z_i_t.get(fog, 0) + y_t, 0)
 
-    g_t = max(0, g_t + f_t)
-
     np_DpPs = np.array(DpP)
     client_ids = np.array(client_ids)
     client_id = client_ids[np_DpPs.argmin()]
+
+    g_t = max(0, g_t + f_t)
+    y = max(0, service_times[client_id] - request['deadlineTime']) - C_D
+    z_t = max(0, z_t + y)
+
     return client_id
