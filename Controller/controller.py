@@ -28,7 +28,7 @@ PROBLEM_GENERATION_POISSON_OBSERVATION_TIME = 10
 # network config
 CONTROLLER_SERVER_PORT = 12345
 
-difficulty_level = 6
+difficulty_level_range = (4, 7)
 all_tasks_queue = []
 
 timing = []
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     endpoint = TCP4ServerEndpoint(reactor, CONTROLLER_SERVER_PORT)
     port = endpoint.listen(ControllerServerFactory(check_interval_ms=CHECK_INTERVAL_MS,
-                                                   difficulty_level=difficulty_level, manage_task=manage_task,
+                                                   difficulty_level_range=difficulty_level_range, manage_task=manage_task,
                                                    request=req,
                                                    add_new_info=add_new_info))
 
