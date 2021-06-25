@@ -152,7 +152,7 @@ def add_new_info(client_obj, server_obj, fog_id, obj):
 
 
 if __name__ == '__main__':
-    req = {"cmp_dmnd": 100, "cmntn_dmnd": 0.5, "deadlineTime": 20}
+    req = {"cmp_dmnd": 100, "cmntn_dmnd": 150_000, "deadlineTime": 20}
 
     endpoint = TCP4ServerEndpoint(reactor, CONTROLLER_SERVER_PORT)
     port = endpoint.listen(ControllerServerFactory(check_interval_ms=CHECK_INTERVAL_MS,

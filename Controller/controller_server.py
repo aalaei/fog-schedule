@@ -23,6 +23,7 @@ class ControllerServer(protocol.Protocol):
         self.chosen_task = None
         self.request = request
         self.initialized = False
+        self.fg_cld = None
         self.add_new_info = add_new_info
 
         reactor.callInThread(self.ping_clients)
@@ -96,6 +97,7 @@ class ControllerServer(protocol.Protocol):
                 self.send_message(value="Something wrong happened, try another client", type='error')
                 self.another_client = None
         elif data['type'] == "id_req":
+            self.fg_cld = data['value']
             object_dict = dict({"self": self.my_id, "all": list(self.clients.keys())})
             self.send_message(value=object_dict, type='id_res')
         elif data['type'] == "cl_status":

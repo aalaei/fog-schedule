@@ -85,18 +85,22 @@ def schedule_task_tmlns(fogs: dict, request):
     client_ids = []
     DpP = []
     C_D = 0  # ??
-    C_L = 1  # ??
+    C_L = 0.1  # ??
+    fg_cld_cof = 1e5
     service_times = {}
     Old_q_len = 0  # By RF
     B_max = max([fog.status.cmp_cpcty for fog in fogs.values()])
     q_v_average = sum([x.status.q_v for x in fogs.values()]) / len(fogs.keys())
     # By RF
     q_len_average = sum([x.status.q_len for x in fogs.values()]) / len(fogs.keys())
+    f_t_const = request['cmp_dmnd'] / (request['cmntn_dmnd'] / fg_cld_cof)
 
-    f_t = request['cmp_dmnd'] / request['cmntn_dmnd'] - C_L
     global g_t, z_t
+    print("{}cmp_dmnd:{}, cmntn_dmnd:{}{}"
+          .format(Fore.MAGENTA, request['cmp_dmnd'], request['cmntn_dmnd'], Style.RESET_ALL))
 
     for fog in fogs.keys():
+
         client_ids.append(fog)
         cmp_service_time = (request['cmp_dmnd'] / fogs[fog].status.cmp_cpcty)
         cmntn_service_time = (request['cmntn_dmnd'] / fogs[fog].status.cmntn_rate)
@@ -111,22 +115,25 @@ def schedule_task_tmlns(fogs: dict, request):
 
         v_i = fogs[fog].status.cmp_cpcty / B_max
         # g_i = fogs[fog].status.q_v / v_i - q_v_average
-        g_i = (fogs[fog].status.q_len - Old_q_len) * (fogs[fog].status.q_len - q_len_average)  # By RF
+        g_i = np.abs(Old_q_len - fogs[fog].status.q_len) * (fogs[fog].status.q_len - q_len_average)  # By RF
         Old_q_len = fogs[fog].status.q_len
         y_t = max(0, service_time - request['deadlineTime']) - C_D
+
+        f_t = (fogs[fog].status.q_len * f_t_const - C_L) if fogs[fog].fg_cld == 'fog' else 0
 
         # single_DpP = total_energy * v + Q_t * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t + g_t * f_t
         # single_DpP = total_energy * v + pow(Q_t, 2) * (h_i_t.get(fog, 0) / v_i + 1) + z_i_t.get(fog, 0) * y_t
         # single_DpP = total_energy * v + pow(Q_t, 2)  + z_i_t.get(fog, 0) * y_t ## 14000331 Okay!!!
         # single_DpP = total_energy * v + pow(Q_t, 2) * (h_i_t.get(fog, 0)+1)  + z_i_t.get(fog, 0) * y_t ## 14000402 so so!!!
-        single_DpP = total_energy * v + pow(Q_t, 2) * (h_i_t.get(fog, 0) + 1) + z_i_t.get(fog, 0) * y_t
+        # single_DpP = total_energy * v + pow(Q_t, 2) * (h_i_t.get(fog, 0) + 1) + z_t * y_t# 14000404 ok
+        single_DpP = total_energy * v + pow(Q_t, 2) * (h_i_t.get(fog, 0) + 1) + z_t * y_t + g_t * f_t
         # single_DpP = total_energy * v + pow(Q_t, 2) + service_time
         DpP.append(single_DpP)
 
         print(Fore.YELLOW +
-              "fog{}: t={:.4f}, (E){:.04f} * (V){}+(Qt){:.4f}*((h){:.4f}/(vi){:.4f}+1)+(z){:.4f}*(y){:.4f}={:.4f}"
+              "fog{}: t={:.4f}, (E){:.04f} * (V){}+(Qt){:.4f}*((h){:.4f}/(vi){:.4f}+1)+(z){:.4f}*(y){:.4f}+(g_t){:.4f}*(f_t){:.4f}={:.4f}"
               .format(fog, service_time, total_energy, v, Q_t, h_i_t.get(fog, 0), v_i, z_i_t.get(fog, 0), y_t,
-                      single_DpP)
+                      g_t, f_t, single_DpP)
               + Style.RESET_ALL)
 
         h_i_t[fog] = h_i_t.get(fog, 0) + g_i
@@ -135,6 +142,8 @@ def schedule_task_tmlns(fogs: dict, request):
     np_DpPs = np.array(DpP)
     client_ids = np.array(client_ids)
     client_id = client_ids[np_DpPs.argmin()]
+
+    f_t = fogs[client_id].status.q_len*(request['cmp_dmnd'] / (request['cmntn_dmnd'] / fg_cld_cof)) - C_L if fogs[client_id].fg_cld == 'fog' else 0
     g_t = max(0, g_t + f_t)
     y = max(0, service_times[client_id] - request['deadlineTime']) - C_D
     z_t = max(0, z_t + y)

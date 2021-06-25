@@ -12,11 +12,12 @@ last_job_id = 1
 
 class FogClient(protocol.Protocol):
 
-    def __init__(self, all_clients: list, status, update_status_func, fog_server_port, fog_server_ip):
+    def __init__(self, all_clients: list, status, update_status_func, fog_server_port, fog_server_ip, fg_cld):
         self.status = status
         self.all_clients = all_clients
         self.FOG_SERVER_PORT = fog_server_port
         self.FOG_SERVER_IP = fog_server_ip
+        self.fg_cld = fg_cld
         print("Created")
         reactor.callInThread(update_status_func, self)
 
@@ -31,7 +32,7 @@ class FogClient(protocol.Protocol):
         self.status = status
 
     def connectionMade(self):
-        self.send_message(type="id_req", value=1)
+        self.send_message(type="id_req", value=self.fg_cld)
 
     def parse_single_command(self, data):
         try:
@@ -67,12 +68,13 @@ class FogClient(protocol.Protocol):
 
 class FogClientFactory(ClFactory):
 
-    def __init__(self, fog_server_ip, fog_server_port, update_status_func):
+    def __init__(self, fog_server_ip, fog_server_port, update_status_func, fg_cld):
         self.fog_server_ip = fog_server_ip
         self.fog_server_port = fog_server_port
         self.update_status_func = update_status_func
         self.all_clients = []
         self.status = Status(None)
+        self.fg_cld = fg_cld
 
     def clientConnectionLost(self, connector, unused_reason):
         self.retry(connector)
@@ -83,4 +85,4 @@ class FogClientFactory(ClFactory):
 
     def buildProtocol(self, addr):
         return FogClient(all_clients=self.all_clients, status=self.status, update_status_func=self.update_status_func,
-                         fog_server_ip=self.fog_server_ip, fog_server_port=self.fog_server_port)
+                         fog_server_ip=self.fog_server_ip, fog_server_port=self.fog_server_port, fg_cld=self.fg_cld)

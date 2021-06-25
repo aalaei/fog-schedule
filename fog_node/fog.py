@@ -37,7 +37,7 @@ def manage_tasks(connections):
             cmp_dmnd_vector.pop(0)
             print("task {} is chosen".format(name))
             related_connections = [x for x in connections.clients.values() if str(x.task_id) == name]
-            if len(related_connections)<1:
+            if len(related_connections) < 1:
                 return
             assert len(related_connections) == 1
             print("task {} is running".format(name))
@@ -98,12 +98,13 @@ if __name__ == '__main__':
     FOG_SERVER_IP = os.getenv("MY_IP", "127.0.0.1")
     my_cpu_power = eval(os.getenv("MY_CPU_POWER", "0"))
     my_network_power = eval(os.getenv("MY_NETWORK_POWER", "0"))
+    fg_cld = os.getenv("fg_cld", "fog")
 
     FOG_SERVER_PORT = random.randint(10000, 65535)
 
     endpoint = TCP4ClientEndpoint(reactor, CONTROLLER_SERVER_IP, CONTROLLER_SERVER_PORT)
     endpoint.connect(FogClientFactory(fog_server_ip=FOG_SERVER_IP, fog_server_port=FOG_SERVER_PORT
-                                      , update_status_func=update_status))
+                                      , update_status_func=update_status, fg_cld=fg_cld))
 
     endpoint2 = TCP4ServerEndpoint(reactor, FOG_SERVER_PORT)
     endpoint2.listen(FogServerFactory(problem_prefix, manage_tasks, enqueue_task))
