@@ -1,10 +1,11 @@
 # Fog-schedule repository
 
-A prototype to benchmark different scheduling tasks(sjq, random, AFC, tmlns, ...).
+A prototype to benchmark different scheduling tasks(sjq, random, AFC, LGA, ...).
 
 ![Controller](images/controller_demo.png)
 ![fog1](images/fog1_demo.png)
-![fog2](images/fog1_demo.png)
+![fog2](images/fog2_demo.png)
+![fog3](images/fog3_demo.png)
 ![cloud](images/cloud_demo.png)
 
 ## Install reqiurements
