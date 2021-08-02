@@ -81,7 +81,9 @@ z_t = 0
 
 
 def schedule_task_tmlns(fogs: dict, request):
-    v = 1000
+    ro=1
+    v_init=1000
+    v = v_init*ro
     client_ids = []
     DpP = []
     C_D = 0  # ??
